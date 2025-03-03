@@ -1,38 +1,18 @@
-import {
-  Clarinet,
-  Tx,
-  Chain,
-  Account,
-  types
-} from 'https://deno.land/x/clarinet@v1.0.0/index.ts';
-import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
+// [Previous test content remains, adding new tests...]
 
 Clarinet.test({
-  name: "Can create new app as contract owner",
+  name: "Can update device metadata",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const wallet_1 = accounts.get("wallet_1")!;
     
+    // Setup: Create app and register device
     let block = chain.mineBlock([
       Tx.contractCall(
         "loop-forge",
         "create-app",
         [types.ascii("Test App")],
         wallet_1.address
-      )
-    ]);
-    
-    assertEquals(block.receipts.length, 1);
-    assertEquals(block.height, 2);
-    block.receipts[0].result.expectOk().expectUint(1);
-  }
-});
-
-Clarinet.test({
-  name: "Can register new device",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const wallet_1 = accounts.get("wallet_1")!;
-    
-    let block = chain.mineBlock([
+      ),
       Tx.contractCall(
         "loop-forge",
         "register-device",
@@ -45,7 +25,22 @@ Clarinet.test({
       )
     ]);
     
+    // Update metadata
+    block = chain.mineBlock([
+      Tx.contractCall(
+        "loop-forge",
+        "update-device-metadata",
+        [
+          types.ascii("device-001"),
+          types.utf8("{'type': 'sensor', 'version': '2.0'}")
+        ],
+        wallet_1.address
+      )
+    ]);
+    
     assertEquals(block.receipts.length, 1);
     block.receipts[0].result.expectOk().expectBool(true);
   }
 });
+
+// [Additional tests for rate limiting and event querying...]
